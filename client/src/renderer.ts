@@ -9,7 +9,7 @@ import {
 import { getPaddleHeight } from "shared/types.js";
 import type { GameState } from "shared/types.js";
 
-const HEADER_H = 32; // logical pixels reserved above the play area
+const HEADER_H = 64; // logical pixels reserved above the play area (fits ~3 lines)
 
 let canvas: HTMLCanvasElement;
 let ctx: CanvasRenderingContext2D;
@@ -41,6 +41,24 @@ function s(val: number): number {
 /** Y offset: everything in the game field is shifted down by HEADER_H */
 function gy(val: number): number {
     return (val + HEADER_H) * scale;
+}
+
+/** Wrap text into lines that fit within maxWidth (in canvas pixels) */
+function wrapText(text: string, maxWidth: number): string[] {
+    const words = text.split(" ");
+    const lines: string[] = [];
+    let current = "";
+    for (const word of words) {
+        const test = current ? current + " " + word : word;
+        if (ctx.measureText(test).width > maxWidth && current) {
+            lines.push(current);
+            current = word;
+        } else {
+            current = test;
+        }
+    }
+    if (current) lines.push(current);
+    return lines;
 }
 
 function showPlayAgainButton(): void {
@@ -93,7 +111,13 @@ export function render(state: GameState | null, statusText: string | null, local
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         const sentence = state.words.join(" ");
-        ctx.fillText(sentence, canvas.width / 2, s(HEADER_H / 2));
+        const lines = wrapText(sentence, canvas.width - s(20));
+        const lineH = s(18);
+        const totalH = lines.length * lineH;
+        const startY = (s(HEADER_H) - totalH) / 2 + lineH / 2;
+        for (let i = 0; i < lines.length; i++) {
+            ctx.fillText(lines[i], canvas.width / 2, startY + i * lineH);
+        }
     }
 
     // Separator line between header and game field
@@ -139,11 +163,14 @@ export function render(state: GameState | null, statusText: string | null, local
 
         if (state.words.length > 0) {
             ctx.font = `${s(20)}px monospace`;
-            ctx.fillText(
-                state.words.join(" "),
-                canvas.width / 2,
-                canvas.height / 2 - s(50),
-            );
+            const sentence = state.words.join(" ");
+            const lines = wrapText(sentence, canvas.width - s(40));
+            const lineH = s(26);
+            const totalH = lines.length * lineH;
+            const startY = canvas.height / 2 - s(50) - (totalH - lineH) / 2;
+            for (let i = 0; i < lines.length; i++) {
+                ctx.fillText(lines[i], canvas.width / 2, startY + i * lineH);
+            }
         }
 
         ctx.font = `${s(36)}px monospace`;
