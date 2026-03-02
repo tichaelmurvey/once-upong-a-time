@@ -54,7 +54,7 @@ export function handleTypeChar(state: GameState, playerIndex: 0 | 1, char: strin
     const paddle = state.paddles[playerIndex];
     if (state.status !== "playing") return;
     if (!paddle.canType) return;
-    if (!/^[a-z]$/.test(char)) return;
+    if (!/^[a-z.?!]$/.test(char)) return;
     if (paddle.word.length >= MAX_WORD_LENGTH) return;
     paddle.word += char;
 }
