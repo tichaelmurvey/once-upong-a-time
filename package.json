@@ -1,0 +1,26 @@
+{
+  "name": "once-upong-a-time",
+  "version": "1.0.0",
+  "description": "2-player networked Pong game",
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "scripts": {
+    "dev:server": "tsx --watch server/index.ts",
+    "dev:client": "vite client/",
+    "build:server": "tsc -p server/tsconfig.json",
+    "build:client": "vite build client/",
+    "build": "npm run build:server && npm run build:client",
+    "start": "node server/dist/index.js"
+  },
+  "dependencies": {
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.5.10",
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.0",
+    "vite": "^6.0.0"
+  }
+}
