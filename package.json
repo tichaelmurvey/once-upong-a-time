@@ -10,8 +10,11 @@
     "dev:client": "vite client/",
     "build:server": "tsc -p server/tsconfig.json",
     "build:client": "vite build client/",
-    "build": "npm run build:server && npm run build:client",
-    "start": "node server/dist/index.js"
+    "build": "npm run build:client && npm run build:server",
+    "start": "node server/dist/server/index.js"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "dependencies": {
     "ws": "^8.16.0"

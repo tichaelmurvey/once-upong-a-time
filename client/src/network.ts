@@ -27,3 +27,24 @@ export function sendPaddleMove(ws: WebSocket, direction: Direction): void {
     ws.send(JSON.stringify(msg));
   }
 }
+
+export function sendTypeChar(ws: WebSocket, char: string): void {
+  if (ws.readyState === WebSocket.OPEN) {
+    const msg: ClientMessage = { type: "typeChar", char };
+    ws.send(JSON.stringify(msg));
+  }
+}
+
+export function sendBackspace(ws: WebSocket): void {
+  if (ws.readyState === WebSocket.OPEN) {
+    const msg: ClientMessage = { type: "backspace" };
+    ws.send(JSON.stringify(msg));
+  }
+}
+
+export function sendPlayAgain(ws: WebSocket): void {
+  if (ws.readyState === WebSocket.OPEN) {
+    const msg: ClientMessage = { type: "playAgain" };
+    ws.send(JSON.stringify(msg));
+  }
+}

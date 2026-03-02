@@ -1,15 +1,22 @@
 import type { Direction } from "shared/types.js";
 
-type InputCallback = (direction: Direction) => void;
+type DirectionCallback = (direction: Direction) => void;
+type TypeCallback = (char: string) => void;
+type ActionCallback = () => void;
 
-export function setupInput(onDirectionChange: InputCallback): void {
+export function setupInput(
+  onDirectionChange: DirectionCallback,
+  onType: TypeCallback,
+  onBackspace: ActionCallback,
+  onPlayAgain: ActionCallback,
+): void {
   const keys = new Set<string>();
   let currentDirection: Direction = "stop";
 
   function update(): void {
     let newDirection: Direction = "stop";
-    const up = keys.has("ArrowUp") || keys.has("w");
-    const down = keys.has("ArrowDown") || keys.has("s");
+    const up = keys.has("ArrowUp");
+    const down = keys.has("ArrowDown");
 
     if (up && !down) newDirection = "up";
     else if (down && !up) newDirection = "down";
@@ -21,15 +28,36 @@ export function setupInput(onDirectionChange: InputCallback): void {
   }
 
   window.addEventListener("keydown", (e) => {
-    if (["ArrowUp", "ArrowDown", "w", "s"].includes(e.key)) {
+    if (e.key === "ArrowUp" || e.key === "ArrowDown") {
       e.preventDefault();
       keys.add(e.key);
       update();
+      return;
+    }
+
+    if (e.key === "Backspace") {
+      e.preventDefault();
+      onBackspace();
+      return;
+    }
+
+    if (e.key === " ") {
+      e.preventDefault();
+      onPlayAgain();
+      return;
+    }
+
+    // Letter keys for typing (a-z only, no repeats from held keys)
+    if (e.key.length === 1 && /^[a-zA-Z]$/.test(e.key) && !e.repeat) {
+      e.preventDefault();
+      onType(e.key.toLowerCase());
     }
   });
 
   window.addEventListener("keyup", (e) => {
-    keys.delete(e.key);
-    update();
+    if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+      keys.delete(e.key);
+      update();
+    }
   });
 }

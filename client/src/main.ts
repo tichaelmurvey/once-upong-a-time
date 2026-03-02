@@ -1,15 +1,20 @@
 import type { GameState } from "shared/types.js";
 import { initCanvas, render } from "./renderer.js";
 import { setupInput } from "./input.js";
-import { connect, sendPaddleMove } from "./network.js";
+import { connect, sendPaddleMove, sendTypeChar, sendBackspace, sendPlayAgain } from "./network.js";
 
 let gameState: GameState | null = null;
 let statusText: string | null = "Connecting...";
 let playerNumber: 1 | 2 = 1;
+let ws: WebSocket;
 
-initCanvas();
+function requestPlayAgain(): void {
+  sendPlayAgain(ws);
+}
 
-const ws = connect(
+initCanvas(requestPlayAgain);
+
+ws = connect(
   (msg) => {
     switch (msg.type) {
       case "joined":
@@ -26,7 +31,6 @@ const ws = connect(
         gameState = msg.state;
         break;
       case "gameOver":
-        // State already has winner info from the last state update
         break;
       case "opponentDisconnected":
         statusText = "Opponent disconnected. Refresh to play again.";
@@ -40,12 +44,15 @@ const ws = connect(
   },
 );
 
-setupInput((direction) => {
-  sendPaddleMove(ws, direction);
-});
+setupInput(
+  (direction) => sendPaddleMove(ws, direction),
+  (char) => sendTypeChar(ws, char),
+  () => sendBackspace(ws),
+  () => requestPlayAgain(),
+);
 
 function loop(): void {
-  render(gameState, statusText);
+  render(gameState, statusText, playerNumber);
   requestAnimationFrame(loop);
 }
 

@@ -1,7 +1,7 @@
 import { WebSocket } from "ws";
 import { TICK_INTERVAL } from "../shared/constants.js";
 import type { ClientMessage, Direction, ServerMessage } from "../shared/types.js";
-import { createInitialState, launchBall, tick } from "./game.js";
+import { createInitialState, handleBackspace, handleTypeChar, launchBall, tick } from "./game.js";
 import type { GameState } from "../shared/types.js";
 
 interface Room {
@@ -45,7 +45,10 @@ function startGame(room: Room): void {
 
     if (room.state.status === "finished") {
       broadcast(room, { type: "gameOver", winner: room.state.winner! });
-      destroyRoom(room);
+      if (room.interval) {
+        clearInterval(room.interval);
+        room.interval = null;
+      }
     }
   }, TICK_INTERVAL);
 }
@@ -98,6 +101,23 @@ export function handleConnection(ws: WebSocket): void {
         const idx = getPlayerIndex(currentRoom, ws);
         if (idx !== -1) {
           currentRoom.inputs[idx] = msg.direction;
+        }
+      } else if (msg.type === "typeChar") {
+        const idx = getPlayerIndex(currentRoom, ws);
+        if (idx !== -1) {
+          handleTypeChar(currentRoom.state, idx as 0 | 1, msg.char);
+        }
+      } else if (msg.type === "backspace") {
+        const idx = getPlayerIndex(currentRoom, ws);
+        if (idx !== -1) {
+          handleBackspace(currentRoom.state, idx as 0 | 1);
+        }
+      } else if (msg.type === "playAgain") {
+        if (currentRoom.state.status === "finished" && !currentRoom.interval && currentRoom.players[0] && currentRoom.players[1]) {
+          currentRoom.state = createInitialState();
+          currentRoom.inputs = ["stop", "stop"];
+          rooms.set(currentRoom.id, currentRoom);
+          startGame(currentRoom);
         }
       }
     } catch {
